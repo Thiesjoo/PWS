@@ -1,0 +1,22 @@
+{
+	"name": "pws",
+	"version": "1.0.0",
+	"description": "*Originial implementation by: [Ben eater](https://github.com/beneater)*",
+	"main": "index.js",
+	"scripts": {
+		"htmlcopy": "cp src/index.html dist/",
+		"node": "nodemon -e html --exec \"npm run htmlcopy\" & tsc --watch",
+		"live": "live-server dist/",
+		"parcel": "parcel src/index.html"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"nodemon": "^2.0.6",
+		"typescript": "^4.1.2"
+	},
+	"dependencies": {
+		"@types/node": "^14.14.12",
+		"parcel-bundler": "^1.12.4"
+	}
+}
