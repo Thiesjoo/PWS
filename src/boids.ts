@@ -24,9 +24,7 @@ export class Boid {
 
 	// Speed will naturally vary in flocking behavior, but real animals can't go
 	// arbitrarily fast.
-	limitSpeed() {
-		const speedLimit = 5;
-
+	limitSpeed(speedLimit) {
 		const speed = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
 		if (speed > speedLimit) {
 			this.dx = (this.dx / speed) * speedLimit;

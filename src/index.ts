@@ -1,15 +1,17 @@
 import { Display } from "./display";
 
-new Display();
+let display = new Display();
 
 if (module.hot) {
 	module.hot.accept();
-	// module.hot.dispose();
+	module.hot.dispose(() => {
+		display.gui.destroy();
+	});
 }
 
 declare var module: {
 	hot: {
 		accept(path?: string, callback?: () => void): void;
-		dispose(path?: string, callback?: () => void): void;
+		dispose(callback: (data: any) => void): void;
 	};
 };

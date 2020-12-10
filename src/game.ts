@@ -2,24 +2,33 @@ import { Display } from "./display";
 import { distance, Vector2 } from "./helper";
 import { Boid } from "./boids";
 
-const numBoids = 200;
-const visualRange = 75;
-
-//Avoidance
-const minDistance = 20; // The distance to stay away from other boids
-const avoidFactor = 0.05; // Adjust velocity by this %
-
-//Speed
-const matchingFactor = 0.05; // Adjust by this % of average velocity
+export interface Settings {
+	numBoids: number;
+	visualRange: number;
+	minDistance: number;
+	avoidFactor: number;
+	matchingFactor: number;
+	speedLimit: number;
+	stroke: boolean;
+}
 
 export class Game {
 	display: Display;
 	boids: Array<Boid> = [];
 
-	constructor(display: Display) {
+	settings: Settings;
+
+	constructor(display: Display, _settings: Settings) {
+		this.settings = _settings;
+
 		this.display = display;
 		// Randomly distribute the boids to start
-		for (let i = 0; i < numBoids; i++) {
+		this.initBoids();
+	}
+
+	initBoids() {
+		this.boids = [];
+		for (let i = 0; i < this.settings.numBoids; i++) {
 			this.boids.push(new Boid());
 		}
 	}
@@ -65,7 +74,7 @@ export class Game {
 
 		for (let otherBoid of this.boids) {
 			if (
-				distance(boid, otherBoid) < visualRange &&
+				distance(boid, otherBoid) < this.settings.visualRange &&
 				boid.team == otherBoid.team
 			) {
 				centerX += otherBoid.x;
@@ -91,7 +100,7 @@ export class Game {
 		let numNeighbors = 0;
 
 		for (let otherBoid of this.boids) {
-			if (distance(boid, otherBoid) < visualRange) {
+			if (distance(boid, otherBoid) < this.settings.visualRange) {
 				avgDX += otherBoid.dx;
 				avgDY += otherBoid.dy;
 				numNeighbors += 1;
@@ -102,8 +111,8 @@ export class Game {
 			avgDX = avgDX / numNeighbors;
 			avgDY = avgDY / numNeighbors;
 
-			boid.dx += (avgDX - boid.dx) * matchingFactor;
-			boid.dy += (avgDY - boid.dy) * matchingFactor;
+			boid.dx += (avgDX - boid.dx) * this.settings.matchingFactor;
+			boid.dy += (avgDY - boid.dy) * this.settings.matchingFactor;
 		}
 	}
 
@@ -112,11 +121,11 @@ export class Game {
 		let moveX1 = 0;
 		let moveY1 = 0;
 
-		let sameTeamAvoid = avoidFactor;
-		let otherTeamAvoid = avoidFactor * 2;
+		let sameTeamAvoid = this.settings.avoidFactor;
+		let otherTeamAvoid = this.settings.avoidFactor * 2;
 
-		let minTeamDist = minDistance;
-		let minOtherDist = minDistance * 5;
+		let minTeamDist = this.settings.minDistance;
+		let minOtherDist = this.settings.minDistance * 5;
 
 		for (let otherBoid of this.boids) {
 			if (otherBoid !== boid) {
@@ -142,7 +151,7 @@ export class Game {
 			this.avoidOthers(boid);
 			this.keepWithinBounds(boid);
 			this.matchVelocity(boid);
-			boid.limitSpeed();
+			boid.limitSpeed(this.settings.speedLimit);
 
 			// Update the position based on the current velocity
 			boid.x += boid.dx;
