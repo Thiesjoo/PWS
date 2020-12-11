@@ -1,8 +1,7 @@
 import { distance, Vector2 } from "./helper";
 
 export class Boid {
-	pos: Vector2;
-	vel: Vector2;
+	target: number = 0;
 
 	x: number;
 	y: number;
@@ -10,7 +9,7 @@ export class Boid {
 	dy: number;
 
 	history: Array<Vector2>;
-	team: number;
+	team: number = 0;
 
 	constructor() {
 		this.x = Math.random() * 1000;
@@ -19,7 +18,7 @@ export class Boid {
 		this.dy = Math.random() * 10 - 5;
 		this.history = [];
 
-		this.team = Math.random() > 0.5 ? 0 : 1;
+		this.team = Math.random() > 0.5 ? 1 : 2;
 	}
 
 	// Speed will naturally vary in flocking behavior, but real animals can't go

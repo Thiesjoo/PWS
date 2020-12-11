@@ -5,6 +5,28 @@ type Coord = Boid | Vector2 | { x: number; y: number };
 export function arrayPoint(point: Coord) {
 	return { x: point[0], y: point[1] };
 }
+export interface Settings {
+	numBoids: number; //Number of boids in sim
+	visualRange: number; //Visual range of each individual boid
+
+	minDistance: number; //Min distance between boids of own team. Is multiplied by 5 for other boids
+	avoidFactor: number; //How to act between boids of own team. Is multiplied by 2 for other boids
+
+	matchingFactor: number; //% of speed matching between boids
+	centeringFactor: number; //% of centering in boid group
+
+	pathDistCutoff: number;
+	pathCenteringFactor: number;
+
+	speedLimit: number; //Max speed for boids
+
+	margin: number; //Margin of screen
+	turnFactor: number; //How hard to avoid bounds
+
+	stroke: boolean; //Draw lines of the boids history
+	paused: boolean; //Pause the sim
+}
+
 export class Vector2 {
 	x: number;
 	y: number;

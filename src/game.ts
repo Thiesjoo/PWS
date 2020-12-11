@@ -1,22 +1,6 @@
 import { Display } from "./display";
-import { distance, Vector2 } from "./helper";
+import { distance, Vector2, Settings } from "./helper";
 import { Boid } from "./boids";
-
-export interface Settings {
-	numBoids: number; //Number of boids in sim
-	visualRange: number; //Visual range of each individual boid
-	minDistance: number; //Min distance between boids of own team. Is multiplied by 5 for other boids
-	avoidFactor: number; //How to act between boids of own team. Is multiplied by 2 for other boids
-	matchingFactor: number; //% of speed matching between boids
-	centeringFactor: number; //% of centering in boid group
-	speedLimit: number; //Max speed for boids
-
-	margin: number; //Margin of screen
-	turnFactor: number; //How hard to avoid bounds
-
-	stroke: boolean; //Draw lines of the boids history
-	paused: boolean; //Pause the sim
-}
 
 export class Game {
 	display: Display;
@@ -93,6 +77,23 @@ export class Game {
 		}
 	}
 
+	headToTarget(boid: Boid, bounds: Array<Vector2> = []) {
+		if (bounds.length > 0) {
+			let currDist = distance(boid, bounds[boid.target]);
+
+			if (currDist < this.settings.pathDistCutoff) {
+				boid.target += boid.team % 2 == 0 ? 1 : -1;
+			}
+			if (boid.target > bounds.length - 1) boid.target = 0;
+			if (boid.target < 0) boid.target = bounds.length - 1;
+
+			boid.dx +=
+				(bounds[boid.target].x - boid.x) * this.settings.pathCenteringFactor;
+			boid.dy +=
+				(bounds[boid.target].y - boid.y) * this.settings.pathCenteringFactor;
+		}
+	}
+
 	// Find the average velocity (speed and direction) of the other boids and
 	// adjust velocity slightly to match.
 	matchVelocity(boid: Boid) {
@@ -126,10 +127,10 @@ export class Game {
 		let moveY1 = 0;
 
 		let sameTeamAvoid = this.settings.avoidFactor;
-		let otherTeamAvoid = this.settings.avoidFactor;
+		let otherTeamAvoid = this.settings.avoidFactor * 2;
 
 		let minTeamDist = this.settings.minDistance;
-		let minOtherDist = this.settings.minDistance * 5;
+		let minOtherDist = this.settings.minDistance * 2;
 
 		for (let otherBoid of this.boids) {
 			if (otherBoid !== boid) {
@@ -147,10 +148,11 @@ export class Game {
 		boid.dy += moveY1;
 	}
 
-	updateBoids() {
+	updateBoids(points: Array<Vector2>) {
 		// Update each boid
 		for (let boid of this.boids) {
 			// Update the velocities according to each rule
+			this.headToTarget(boid, points);
 			this.flyTowardsCenter(boid);
 			this.avoidOthers(boid);
 			this.keepWithinBounds(boid);
