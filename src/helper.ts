@@ -1,6 +1,8 @@
 import { Boid } from "./boids";
 
-export function arrayPoint(point) {
+type Coord = Boid | Vector2 | { x: number; y: number };
+
+export function arrayPoint(point: Coord) {
 	return { x: point[0], y: point[1] };
 }
 export class Vector2 {
@@ -11,9 +13,21 @@ export class Vector2 {
 		this.x = _x;
 		this.y = _y;
 	}
+
+	add(vec: Vector2 | number): Vector2 {
+		this.x += typeof vec === "number" ? vec : vec.x;
+		this.y += typeof vec === "number" ? vec : vec.y;
+		return this;
+	}
+
+	mult(vec: Vector2 | number): Vector2 {
+		this.x *= typeof vec === "number" ? vec : vec.x;
+		this.y *= typeof vec === "number" ? vec : vec.y;
+		return this;
+	}
 }
 
-export function distance(boid1: Boid | Vector2, boid2: Boid | Vector2): number {
+export function distance(boid1: Coord, boid2: Coord): number {
 	let dx = Math.abs(boid2.x - boid1.x);
 	let dy = Math.abs(boid2.y - boid1.y);
 

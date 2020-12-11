@@ -3,13 +3,19 @@ import { distance, Vector2 } from "./helper";
 import { Boid } from "./boids";
 
 export interface Settings {
-	numBoids: number;
-	visualRange: number;
-	minDistance: number;
-	avoidFactor: number;
-	matchingFactor: number;
-	speedLimit: number;
-	stroke: boolean;
+	numBoids: number; //Number of boids in sim
+	visualRange: number; //Visual range of each individual boid
+	minDistance: number; //Min distance between boids of own team. Is multiplied by 5 for other boids
+	avoidFactor: number; //How to act between boids of own team. Is multiplied by 2 for other boids
+	matchingFactor: number; //% of speed matching between boids
+	centeringFactor: number; //% of centering in boid group
+	speedLimit: number; //Max speed for boids
+
+	margin: number; //Margin of screen
+	turnFactor: number; //How hard to avoid bounds
+
+	stroke: boolean; //Draw lines of the boids history
+	paused: boolean; //Pause the sim
 }
 
 export class Game {
@@ -35,26 +41,23 @@ export class Game {
 
 	// Constrain a boid to within the window. If it gets too close to an edge,
 	// nudge it back in and reverse its direction.
-	keepWithinBounds(boid) {
-		const margin = 10;
-		const turnFactor = 1;
-
-		if (boid.x < margin) {
-			boid.dx += turnFactor;
+	keepWithinBounds(boid: Boid) {
+		if (boid.x < this.settings.margin) {
+			boid.dx += this.settings.turnFactor;
 		}
-		if (boid.x > this.display.width - margin) {
-			boid.dx -= turnFactor;
+		if (boid.x > this.display.width - this.settings.margin) {
+			boid.dx -= this.settings.turnFactor;
 		}
-		if (boid.y < margin) {
-			boid.dy += turnFactor;
+		if (boid.y < this.settings.margin) {
+			boid.dy += this.settings.turnFactor;
 		}
-		if (boid.y > this.display.height - margin) {
-			boid.dy -= turnFactor;
+		if (boid.y > this.display.height - this.settings.margin) {
+			boid.dy -= this.settings.turnFactor;
 		}
 	}
 
 	// TODO: This is naive and inefficient.
-	nClosestBoids(boid, n) {
+	nClosestBoids(boid: Boid, n: number): Array<Boid> {
 		// Make a copy
 		const sorted = this.boids.slice();
 		// Sort the copy by distance from `boid`
@@ -65,17 +68,15 @@ export class Game {
 
 	// Find the center of mass of the other boids and adjust velocity slightly to
 	// point towards the center of mass.
-	flyTowardsCenter(boid) {
-		const centeringFactor = 0.005; // adjust velocity by this %
-
+	flyTowardsCenter(boid: Boid) {
 		let centerX = 0;
 		let centerY = 0;
 		let numNeighbors = 0;
 
 		for (let otherBoid of this.boids) {
 			if (
-				distance(boid, otherBoid) < this.settings.visualRange &&
-				boid.team == otherBoid.team
+				boid.team == otherBoid.team &&
+				distance(boid, otherBoid) < this.settings.visualRange
 			) {
 				centerX += otherBoid.x;
 				centerY += otherBoid.y;
@@ -87,20 +88,23 @@ export class Game {
 			centerX = centerX / numNeighbors;
 			centerY = centerY / numNeighbors;
 
-			boid.dx += (centerX - boid.x) * centeringFactor;
-			boid.dy += (centerY - boid.y) * centeringFactor;
+			boid.dx += (centerX - boid.x) * this.settings.centeringFactor;
+			boid.dy += (centerY - boid.y) * this.settings.centeringFactor;
 		}
 	}
 
 	// Find the average velocity (speed and direction) of the other boids and
 	// adjust velocity slightly to match.
-	matchVelocity(boid) {
+	matchVelocity(boid: Boid) {
 		let avgDX = 0;
 		let avgDY = 0;
 		let numNeighbors = 0;
 
 		for (let otherBoid of this.boids) {
-			if (distance(boid, otherBoid) < this.settings.visualRange) {
+			if (
+				otherBoid.team === boid.team &&
+				distance(boid, otherBoid) < this.settings.visualRange
+			) {
 				avgDX += otherBoid.dx;
 				avgDY += otherBoid.dy;
 				numNeighbors += 1;
@@ -117,12 +121,12 @@ export class Game {
 	}
 
 	// Move away from other boids that are too close to avoid colliding
-	avoidOthers(boid) {
+	avoidOthers(boid: Boid) {
 		let moveX1 = 0;
 		let moveY1 = 0;
 
 		let sameTeamAvoid = this.settings.avoidFactor;
-		let otherTeamAvoid = this.settings.avoidFactor * 2;
+		let otherTeamAvoid = this.settings.avoidFactor;
 
 		let minTeamDist = this.settings.minDistance;
 		let minOtherDist = this.settings.minDistance * 5;

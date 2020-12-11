@@ -5,7 +5,7 @@ let display = new Display();
 if (module.hot) {
 	module.hot.accept();
 	module.hot.dispose(() => {
-		display.gui.destroy();
+		display.init();
 	});
 }
 

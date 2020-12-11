@@ -4,14 +4,14 @@
 	"description": "*Originial implementation by: [Ben eater](https://github.com/beneater)*",
 	"main": "index.js",
 	"scripts": {
-		"htmlcopy": "cp src/index.html dist/",
-		"node": "nodemon -e html --exec \"npm run htmlcopy\" & tsc --watch",
-		"live": "live-server dist/",
-		"parcel": "parcel src/index.html"
+		"start": "parcel src/index.html",
+		"predeploy": "rm -rf dist && parcel build src/index.html --public-url https://thiesjoo.github.io/PWS/",
+		"deploy": "gh-pages -d dist"
 	},
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"gh-pages": "^3.1.0",
 		"nodemon": "^2.0.6",
 		"typescript": "^4.1.2"
 	},

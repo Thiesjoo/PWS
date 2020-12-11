@@ -4,19 +4,6 @@ import { arrayPoint, distance, Vector2 } from "./helper";
 import * as dat from "dat.gui";
 import { Boid } from "./boids";
 
-// const numBoids = 200;
-// const visualRange = 75;
-
-// //Avoidance
-// const minDistance = 20; // The distance to stay away from other boids
-// const avoidFactor = 0.05; // Adjust velocity by this %
-
-// //Speed
-// const matchingFactor = 0.05; // Adjust by this % of average velocity
-
-// Size of canvas. These get updated to fill the whole browser.
-let paused = false;
-
 //Colors
 let teams = { fill: ["#558cf4", "#df2a2a"], stroke: ["#558cf466", "#E55454"] };
 export class Display {
@@ -34,12 +21,16 @@ export class Display {
 
 		this.gameSettings = {
 			numBoids: 200,
-			visualRange: 75,
-			minDistance: 20,
-			avoidFactor: 0.05,
+			visualRange: 200,
+			minDistance: 75,
+			avoidFactor: 0.002,
 			matchingFactor: 0.05,
 			speedLimit: 5,
+			centeringFactor: 0.0001,
+			turnFactor: 0.1,
+			margin: 50,
 			stroke: false,
+			paused: false,
 		};
 
 		this.game = new Game(this, this.gameSettings);
@@ -47,38 +38,7 @@ export class Display {
 		this.animationLoop = this.animationLoop.bind(this);
 		this.sizeCanvas = this.sizeCanvas.bind(this);
 
-		const settingsChanged = () => {
-			this.game.settings = this.gameSettings;
-			if (this.game.boids.length !== this.gameSettings.numBoids) {
-				this.game.initBoids();
-			}
-		};
-
-		// Creating a GUI and a subfolder.
-		this.gui = new dat.GUI();
-		var folder1 = this.gui.addFolder("Settings");
-
-		folder1
-			.add(this.gameSettings, "numBoids", 0, 500, 50)
-			.onFinishChange(settingsChanged);
-		folder1
-			.add(this.gameSettings, "visualRange", 0, 2000, 25)
-			.onFinishChange(settingsChanged);
-		folder1
-			.add(this.gameSettings, "minDistance", 1, 200, 1)
-			.onFinishChange(settingsChanged);
-		folder1
-			.add(this.gameSettings, "avoidFactor", 0, 0.2, 0.01)
-			.onFinishChange(settingsChanged);
-		folder1
-			.add(this.gameSettings, "matchingFactor", 0, 0.2, 0.01)
-			.onFinishChange(settingsChanged);
-		folder1
-			.add(this.gameSettings, "speedLimit", 0, 50, 1)
-			.onFinishChange(settingsChanged);
-		folder1
-			.add(this.gameSettings, "stroke", 0, 1, 1)
-			.onFinishChange(settingsChanged);
+		this.init();
 
 		window.onload = () => {
 			// Make sure the canvas always fills the whole window
@@ -87,6 +47,54 @@ export class Display {
 
 			window.requestAnimationFrame(this.animationLoop);
 		};
+	}
+
+	init() {
+		const settingsChanged = () => {
+			this.game.settings = this.gameSettings;
+			if (this.game.boids.length !== this.gameSettings.numBoids) {
+				this.game.initBoids();
+			}
+		};
+		this.gui?.destroy();
+		// Creating a GUI and a subfolder.
+		this.gui = new dat.GUI();
+		const simSettings = this.gui.addFolder("SimSettings");
+		const visualSettings = this.gui.addFolder("VisualSettings");
+
+		simSettings
+			.add(this.gameSettings, "numBoids", 0, 500, 50)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "visualRange", 0, 2000, 25)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "minDistance", 1, 200, 1)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "avoidFactor", 0, 0.2, 0.001)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "matchingFactor", 0, 0.2, 0.01)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "speedLimit", 0, 50, 1)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "turnFactor", 0, 5, 0.25)
+			.onFinishChange(settingsChanged);
+		simSettings
+			.add(this.gameSettings, "centeringFactor", 0, 0.5, 0.0001)
+			.onFinishChange(settingsChanged);
+		visualSettings
+			.add(this.gameSettings, "stroke", 0, 1, 1)
+			.onFinishChange(settingsChanged);
+		visualSettings
+			.add(this.gameSettings, "paused", 0, 1, 1)
+			.onFinishChange(settingsChanged);
+		visualSettings
+			.add(this.gameSettings, "margin", 0, 100, 10)
+			.onFinishChange(settingsChanged);
 	}
 
 	// Called initially and whenever the window resizes to update the canvas
@@ -101,7 +109,7 @@ export class Display {
 
 	// Main animation loop
 	animationLoop() {
-		if (paused) {
+		if (this.game.settings.paused) {
 			setTimeout(() => {
 				window.requestAnimationFrame(this.animationLoop);
 			}, 1000);
@@ -112,6 +120,7 @@ export class Display {
 		// Clear the canvas and redraw all the boids in their current positions
 		const ctx = this.canvas.getContext("2d");
 		ctx.clearRect(0, 0, this.width, this.height);
+		this.drawPath(ctx);
 		for (let boid of this.game.boids) {
 			this.drawBoid(ctx, boid);
 		}
@@ -120,7 +129,38 @@ export class Display {
 		window.requestAnimationFrame(this.animationLoop);
 	}
 
-	drawBoid(ctx, boid: Boid) {
+	drawPath(ctx: CanvasRenderingContext2D) {
+		const multiplier = 10;
+		const points: Array<Vector2> = [
+			new Vector2(0, 0).mult(multiplier),
+			new Vector2(100, 0).mult(multiplier),
+			new Vector2(100, 100).mult(multiplier),
+
+			new Vector2(0, 100).mult(multiplier),
+			new Vector2(0, 0).mult(multiplier),
+
+			// new Vector2(13, 10).mult(multiplier),
+			// new Vector2(35, 10).mult(multiplier),
+		];
+
+		ctx.beginPath();
+		// move to the first point
+		ctx.moveTo(points[0].x, points[0].y);
+
+		for (let i = 1; i < points.length - 2; i++) {
+			var xc = (points[i].x + points[i + 1].x) / 2;
+			var yc = (points[i].y + points[i + 1].y) / 2;
+			ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+		}
+		let last2 = points[points.length - 2];
+		let last1 = points[points.length - 2];
+
+		// curve through the last two points
+		ctx.quadraticCurveTo(last2.x, last2.y, last1.x, last2.y);
+		ctx.stroke();
+	}
+
+	drawBoid(ctx: CanvasRenderingContext2D, boid: Boid) {
 		const angle = Math.atan2(boid.dy, boid.dx);
 		ctx.translate(boid.x, boid.y);
 		ctx.rotate(angle);

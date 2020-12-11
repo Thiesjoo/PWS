@@ -13,8 +13,8 @@ export class Boid {
 	team: number;
 
 	constructor() {
-		this.x = Math.random() * 100; //WIDTH
-		this.y = Math.random() * 100;
+		this.x = Math.random() * 1000;
+		this.y = Math.random() * 1000;
 		this.dx = Math.random() * 10 - 5;
 		this.dy = Math.random() * 10 - 5;
 		this.history = [];
