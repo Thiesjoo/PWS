@@ -11,4 +11,4 @@ parcelRequire=function(e,r,t,n){var i,o="function"==typeof parcelRequire&&parcel
 },{"./game":"MYCW","./helper":"L4DV","dat.gui":"KkZG"}],"QCba":[function(require,module,exports) {
 "use strict";Object.defineProperty(exports,"__esModule",{value:!0});var e=require("./display"),o=new e.Display;module.hot&&(module.hot.accept(),module.hot.dispose(function(){o.gui.destroy()}));
 },{"./display":"rrIe"}]},{},["QCba"], null)
-//# sourceMappingURL=/src.8c81bee7.js.map
+//# sourceMappingURL=https://thiesjoo.github.io/PWS/src.8c81bee7.js.map
