@@ -43,14 +43,16 @@ export class Display {
 		this.recordSettings = {
 			time: 3,
 			record: () => {
-				const chunks = []; // here we will store our recorded media chunks (Blobs)
-				const stream = (this.canvas as any).captureStream(); // grab our canvas MediaStream
+				let chunks = []; // here we will store our recorded media chunks (Blobs)
+				let stream: MediaStream = (this.canvas as any).captureStream(60); // grab our canvas MediaStream
 				const rec = new MediaRecorder(stream); // init the recorder
 				// every time the recorder has new data, we will store it in our array
 				rec.ondataavailable = (e) => chunks.push(e.data);
 				// only when the recorder stops, we construct a complete Blob from all the chunks
 				rec.onstop = (e) => {
 					exportVid(new Blob(chunks, { type: "video/mp4" }));
+					chunks = [];
+					stream = null;
 				};
 
 				rec.start();
@@ -69,9 +71,13 @@ export class Display {
 						currDate.getMonth() + 1
 					}`;
 					a.href = vid.src;
-					a.textContent = "download the video";
 					document.body.appendChild(a);
 					a.click();
+					a.remove();
+					vid.remove();
+					stream.getTracks().forEach((element) => {
+						element.stop();
+					});
 				}
 			},
 		};
@@ -189,6 +195,7 @@ export class Display {
 		this.lastCallTime = performance.now();
 		this.fps = Math.round(1 / delta);
 
+		this.game.updateBoids([...this.tempPath]);
 		this.game.updateBoids([...this.tempPath]);
 
 		// Clear the canvas and redraw all the boids in their current positions

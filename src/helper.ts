@@ -47,6 +47,25 @@ export class Vector2 {
 		this.y *= typeof vec === "number" ? vec : vec.y;
 		return this;
 	}
+
+	rotate(degrees: number): Vector2 {
+		const theta = -degrees * (Math.PI / 180);
+		const cos = Math.cos(theta);
+		const sin = Math.sin(theta);
+
+		const xTemp = this.x;
+		this.x = Math.round(10000 * (this.x * cos - this.y * sin)) / 10000;
+		this.y = Math.round(10000 * (xTemp * sin + this.y * cos)) / 10000;
+		return this;
+	}
+
+	copy(): Vector2 {
+		return new Vector2(this.x, this.y);
+	}
+
+	length(): number {
+		return Math.abs(this.x) + Math.abs(this.y);
+	}
 }
 
 export function distance(boid1: Coord, boid2: Coord): number {
