@@ -78,7 +78,7 @@ export class Game {
 	}
 
 	headToTarget(boid: Boid, bounds: Array<Vector2> = []) {
-		if (bounds.length > 0) {
+		if (bounds.length > 1) {
 			let currDist = distance(boid, bounds[boid.target]);
 
 			if (currDist < this.settings.pathDistCutoff) {

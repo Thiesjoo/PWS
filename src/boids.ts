@@ -18,7 +18,8 @@ export class Boid {
 		this.dy = Math.random() * 10 - 5;
 		this.history = [];
 
-		this.team = Math.random() > 0.5 ? 1 : 2;
+		this.team = 1;
+		// this.team = Math.random() > 0.5 ? 1 : 2;
 	}
 
 	// Speed will naturally vary in flocking behavior, but real animals can't go

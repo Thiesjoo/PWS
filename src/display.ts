@@ -117,7 +117,7 @@ export class Display {
 		const visualSettings = this.gui.addFolder("Visual Settings");
 
 		simSettings
-			.add(this.gameSettings, "numBoids", 0, 500, 50)
+			.add(this.gameSettings, "numBoids", 0, 500, 1)
 			.onFinishChange(settingsChanged);
 		simSettings
 			.add(this.gameSettings, "visualRange", 0, 2000, 25)
