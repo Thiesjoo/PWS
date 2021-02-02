@@ -19,7 +19,7 @@ export class Game {
 	initBoids() {
 		this.boids = [];
 		for (let i = 0; i < this.settings.numBoids; i++) {
-			this.boids.push(new Boid());
+			this.boids.push(new Boid(this.display.width, this.display.height));
 		}
 	}
 
@@ -77,7 +77,7 @@ export class Game {
 		}
 	}
 
-	headToTarget(boid: Boid, bounds: Array<Vector2> = []) {
+	headToTarget(boid: Boid, index, bounds: Array<Vector2> = []) {
 		if (bounds.length > 1) {
 			let currDist = distance(boid, bounds[boid.target]);
 
@@ -150,9 +150,10 @@ export class Game {
 
 	updateBoids(points: Array<Vector2>) {
 		// Update each boid
-		for (let boid of this.boids) {
+		for (let [i, boid] of this.boids.entries()) {
+			let initSpeed = [boid.dx, boid.dy];
 			// Update the velocities according to each rule
-			this.headToTarget(boid, points);
+			this.headToTarget(boid, i, points);
 			this.flyTowardsCenter(boid);
 			this.avoidOthers(boid);
 			this.keepWithinBounds(boid);
@@ -160,8 +161,8 @@ export class Game {
 			boid.limitSpeed(this.settings.speedLimit);
 
 			// Update the position based on the current velocity
-			boid.x += boid.dx;
-			boid.y += boid.dy;
+			boid.x += (boid.dx + initSpeed[0]) / 2;
+			boid.y += (boid.dy + initSpeed[1]) / 2;
 			boid.history.push(new Vector2(boid.x, boid.y));
 			boid.history = boid.history.slice(-50);
 		}

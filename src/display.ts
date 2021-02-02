@@ -88,14 +88,13 @@ export class Display {
 		this.animationLoop = this.animationLoop.bind(this);
 		this.sizeCanvas = this.sizeCanvas.bind(this);
 
-		this.init();
-
 		window.onload = () => {
 			// Make sure the canvas always fills the whole window
 			window.addEventListener("resize", this.sizeCanvas, false);
 			this.canvas.addEventListener("click", this.click);
 			this.sizeCanvas();
 			this.canvas.getContext("2d").font = "30px Arial";
+			this.init();
 
 			window.requestAnimationFrame(this.animationLoop);
 		};

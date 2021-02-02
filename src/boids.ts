@@ -11,15 +11,15 @@ export class Boid {
 	history: Array<Vector2>;
 	team: number = 0;
 
-	constructor() {
-		this.x = Math.random() * 1000;
-		this.y = Math.random() * 1000;
+	constructor(width, height) {
+		this.team = Math.random() > 0.5 ? 1 : 2;
+		// this.team = 1;
+
+		this.x = this.team === 1 ? width : 0;
+		this.y = height / 2;
 		this.dx = Math.random() * 10 - 5;
 		this.dy = Math.random() * 10 - 5;
 		this.history = [];
-
-		this.team = 1;
-		// this.team = Math.random() > 0.5 ? 1 : 2;
 	}
 
 	// Speed will naturally vary in flocking behavior, but real animals can't go
