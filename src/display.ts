@@ -15,9 +15,14 @@ export class Display {
 
 	gui: dat.GUI;
 	gameSettings: Settings;
-	recordSettings: { time: number; record: () => void };
+	recordSettings: {
+		time: number;
+		recordClip: () => void;
+		recordSpeed: () => void;
+	};
 
 	tempPath: Array<Vector2> = [];
+	tempSpeed: Array<number> = [];
 	lastCallTime: number;
 	fps: number = 0;
 
@@ -25,16 +30,16 @@ export class Display {
 		this.canvas = <HTMLCanvasElement>document.getElementById("boids");
 
 		this.gameSettings = {
-			numBoids: 300,
-			visualRange: 200,
+			numBoids: 50,
+			visualRange: 100,
 			minDistance: 50,
-			avoidFactor: 0.01,
-			matchingFactor: 0.01,
+			avoidFactor: 0.001,
+			matchingFactor: 0.0,
 			speedLimit: 5,
 			centeringFactor: 0,
 			turnFactor: 0.1,
 			margin: 50,
-			pathCenteringFactor: 0.0001,
+			pathCenteringFactor: 0.0005,
 			pathDistCutoff: 100,
 			stroke: false,
 			paused: false,
@@ -42,7 +47,11 @@ export class Display {
 
 		this.recordSettings = {
 			time: 3,
-			record: () => {
+			recordSpeed: () => {
+				console.log(this.tempSpeed);
+				return;
+			},
+			recordClip: () => {
 				let chunks = []; // here we will store our recorded media chunks (Blobs)
 				let stream: MediaStream = (this.canvas as any).captureStream(60); // grab our canvas MediaStream
 				const rec = new MediaRecorder(stream); // init the recorder
@@ -159,7 +168,8 @@ export class Display {
 			.onFinishChange(settingsChanged);
 
 		visualSettings.add(this.recordSettings, "time", 1, 30, 1);
-		visualSettings.add(this.recordSettings, "record");
+		visualSettings.add(this.recordSettings, "recordClip");
+		visualSettings.add(this.recordSettings, "recordSpeed");
 	}
 
 	// Called initially and whenever the window resizes to update the canvas
@@ -201,21 +211,20 @@ export class Display {
 		const ctx = this.canvas.getContext("2d");
 		ctx.clearRect(0, 0, this.width, this.height);
 		ctx.fillText(`FPS: ${this.fps}`, 10, 30);
-		ctx.fillText(
-			`AvgSpeed: ${
-				Math.round(
-					(this.game.boids.reduce((acc, val) => {
-						acc += Math.sqrt(val.dx ** 2 + val.dy ** 2);
-						return acc;
-					}, 0) /
-						this.game.boids.length +
-						Number.EPSILON) *
-						100
-				) / 100
-			}`,
-			10,
-			60
-		);
+		const avgSpeed =
+			Math.round(
+				(this.game.boids.reduce((acc, val) => {
+					acc += Math.sqrt(val.dx ** 2 + val.dy ** 2);
+					return acc;
+				}, 0) /
+					this.game.boids.length +
+					Number.EPSILON) *
+					100
+			) / 100;
+
+		this.tempSpeed.push(avgSpeed);
+		this.tempSpeed = this.tempSpeed.slice(-50);
+		ctx.fillText(`AvgSpeed: ${avgSpeed}`, 10, 60);
 
 		//Draw path and boids
 		this.drawPath(ctx);
