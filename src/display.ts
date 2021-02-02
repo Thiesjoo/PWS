@@ -45,10 +45,35 @@ export class Display {
 			paused: false,
 		};
 
+		const test = async (num: number): Promise<number> => {
+			return new Promise((done) => {
+				this.gameSettings.numBoids = num;
+				this.game.initBoids();
+
+				setTimeout(() => {
+					done(
+						Math.round(
+							(this.tempSpeed.reduce((acc, val) => acc + val, 0) /
+								this.tempSpeed.length +
+								Number.EPSILON) *
+								100
+						) / 100
+					);
+				}, 20000);
+			});
+		};
+
 		this.recordSettings = {
-			time: 3,
-			recordSpeed: () => {
+			time: 200,
+			recordSpeed: async () => {
 				console.log(this.tempSpeed);
+
+				const num = [20, 50, 100, 200, 500, 1000];
+				for (let i = 0; i < num.length; i++) {
+					console.log(num[i], await test(num[i]));
+					this.tempSpeed = [];
+				}
+
 				return;
 			},
 			recordClip: () => {
@@ -151,7 +176,7 @@ export class Display {
 			.onFinishChange(settingsChanged);
 
 		pathSettings
-			.add(this.gameSettings, "pathDistCutoff", 0, 100, 1)
+			.add(this.gameSettings, "pathDistCutoff", 0, 1000, 1)
 			.onFinishChange(settingsChanged);
 		pathSettings
 			.add(this.gameSettings, "pathCenteringFactor", 0, 0.1, 0.0001)
@@ -167,7 +192,7 @@ export class Display {
 			.add(this.gameSettings, "margin", 0, 100, 10)
 			.onFinishChange(settingsChanged);
 
-		visualSettings.add(this.recordSettings, "time", 1, 30, 1);
+		visualSettings.add(this.recordSettings, "time", 1, 1000, 1);
 		visualSettings.add(this.recordSettings, "recordClip");
 		visualSettings.add(this.recordSettings, "recordSpeed");
 	}
@@ -223,7 +248,7 @@ export class Display {
 			) / 100;
 
 		this.tempSpeed.push(avgSpeed);
-		this.tempSpeed = this.tempSpeed.slice(-50);
+		this.tempSpeed = this.tempSpeed.slice(-this.recordSettings.time);
 		ctx.fillText(`AvgSpeed: ${avgSpeed}`, 10, 60);
 
 		//Draw path and boids
